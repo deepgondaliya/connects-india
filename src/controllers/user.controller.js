@@ -1,8 +1,10 @@
 const asyncHandler = require('../utils/asyncHandler');
 const User = require('../models/User.model');
 const UserDetail = require('../models/UserDetail.model');
-const { profileSchema } = require('../validators/user.validator');
+const { profileSchema, updateProfileSchema } = require('../validators/user.validator');
 const { success } = require('../utils/response');
+const { getPublicProfile, updateProfile } = require('../services/user.service');
+const mongoose = require('mongoose');
 
 const getProfile = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id).populate('userDetailId');
@@ -13,22 +15,51 @@ const createProfile = asyncHandler(async (req, res) => {
   const { error } = profileSchema.validate(req.body);
   if (error) return res.status(400).json({ success: false, message: error.details[0].message });
 
-  // Cloudinary upload result
   const profileImage = req.file?.path || null;
 
   const detail = await UserDetail.create({
     ...req.body,
     profileImage,
+    habits: req.body.habits?.split(',').map(h => h.trim()).filter(Boolean) || [],
+    interests: req.body.interests?.split(',').map(i => i.trim()).filter(Boolean) || [],
+    skills: req.body.skills?.split(',').map(s => s.trim()).filter(Boolean) || [],
   });
 
   await User.findByIdAndUpdate(req.user._id, { userDetailId: detail._id });
 
-  success(res, {
-    profile: {
-      ...detail.toObject(),
-      profileImage // ensure secure_url is returned
-    }
-  }, 'Profile completed');
+  success(res, { profile: detail.toObject() }, 'Profile completed');
 });
 
-module.exports = { getProfile, createProfile };
+const getUserProfileById = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const profile = await getPublicProfile(id);
+  success(res, { profile });
+});
+
+const updateUserProfile = asyncHandler(async (req, res) => {
+  const { error } = updateProfileSchema.validate(req.body);
+  if (error) return res.status(400).json({ success: false, message: error.details[0].message });
+  
+  const updates = req.body;
+  const file = req.file;
+
+  const updatedProfile = await updateProfile(req.user._id, updates, file);
+  success(res, { profile: updatedProfile }, 'Profile updated');
+});
+
+const logout = asyncHandler(async (req, res) => {
+  res.clearCookie('jwt', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+  });
+  success(res, null, 'Logged out successfully');
+});
+
+module.exports = {
+  getProfile,
+  createProfile,
+  getUserProfileById,
+  updateUserProfile,
+  logout,
+};
