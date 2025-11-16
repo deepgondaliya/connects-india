@@ -1,5 +1,5 @@
 const asyncHandler = require('../utils/asyncHandler');
-const { sendMessage, getChatHistory } = require('../services/chat.service');
+const { sendMessage, getChatHistory, getChatList } = require('../services/chat.service');
 const { success } = require('../utils/response');
 const mongoose = require('mongoose');
 
@@ -31,4 +31,9 @@ const getChatHistoryCtrl = asyncHandler(async (req, res) => {
   success(res, { messages }, 'Chat history fetched');
 });
 
-module.exports = { sendMessageCtrl, getChatHistoryCtrl };
+const getChatListCtrl = asyncHandler(async (req, res) => {
+  const chats = await getChatList(req.user._id);
+  success(res, { chats }, 'Chats fetched');
+});
+
+module.exports = { sendMessageCtrl, getChatHistoryCtrl, getChatListCtrl };

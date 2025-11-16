@@ -1,0 +1,93 @@
+const asyncHandler = require('../utils/asyncHandler');
+const { success } = require('../utils/response');
+const mongoose = require('mongoose');
+const {
+  likeUser,
+  getLikedUsers,
+  sendConnectionRequest,
+  getSentRequests,
+  getReceivedRequests,
+  getActiveConnections,
+  acceptRequest,
+  rejectRequest,
+} = require('../services/connection.service');
+
+const likeUserCtrl = asyncHandler(async (req, res) => {
+  const { likedUserId } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(likedUserId)) {
+    return res.status(400).json({ success: false, message: 'Invalid user ID' });
+  }
+
+  await likeUser(req.user._id, likedUserId);
+  success(res, null, 'User liked');
+});
+
+const getLikesCtrl = asyncHandler(async (req, res) => {
+  const liked = await getLikedUsers(req.user._id);
+  success(res, { liked });
+});
+
+const sendRequestCtrl = asyncHandler(async (req, res) => {
+  const { receiverId } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(receiverId)) {
+    return res.status(400).json({ success: false, message: 'Invalid receiver ID' });
+  }
+
+  await sendConnectionRequest(req.user._id, receiverId);
+  success(res, null, 'Request sent');
+});
+
+const getSentRequestsCtrl = asyncHandler(async (req, res) => {
+  const requests = await getSentRequests(req.user._id);
+  const formatted = requests.map(r => ({
+    _id: r.receiverId._id,
+    fullName: r.receiverId.userDetailId?.fullName,
+    profileImage: r.receiverId.userDetailId?.profileImage,
+  }));
+  success(res, { requests: formatted });
+});
+
+const getReceivedRequestsCtrl = asyncHandler(async (req, res) => {
+  const requests = await getReceivedRequests(req.user._id);
+  const formatted = requests.map(r => ({
+    requestId: r._id,
+    _id: r.senderId._id,
+    fullName: r.senderId.userDetailId?.fullName,
+    profileImage: r.senderId.userDetailId?.profileImage,
+  }));
+  success(res, { requests: formatted });
+});
+
+const getConnectionsCtrl = asyncHandler(async (req, res) => {
+  const connections = await getActiveConnections(req.user._id);
+  const formatted = connections.map(c => ({
+    _id: c._id,
+    fullName: c.userDetailId?.fullName,
+    city: c.userDetailId?.city,
+    profileImage: c.userDetailId?.profileImage,
+  }));
+  success(res, { connections: formatted });
+});
+
+const acceptRequestCtrl = asyncHandler(async (req, res) => {
+  const { requestId } = req.params;
+  await acceptRequest(requestId, req.user._id);
+  success(res, null, 'Connection created');
+});
+
+const rejectRequestCtrl = asyncHandler(async (req, res) => {
+  const { requestId } = req.params;
+  await rejectRequest(requestId, req.user._id);
+  success(res, null, 'Request rejected');
+});
+
+module.exports = {
+  likeUserCtrl,
+  getLikesCtrl,
+  sendRequestCtrl,
+  getSentRequestsCtrl,
+  getReceivedRequestsCtrl,
+  getConnectionsCtrl,
+  acceptRequestCtrl,
+  rejectRequestCtrl,
+};
