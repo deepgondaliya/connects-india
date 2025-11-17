@@ -5,7 +5,7 @@ const { signToken } = require('../config/jwt');
 
 const sendOtp = async (phoneNumber) => {
   const otp = generateOTP();
-  const expiresAt = new Date(Date.now() + 60 * 1000);
+  const expiresAt = new Date(Date.now() + 3 * 60 * 1000); // 3 minutes for client testing
 
   await Otp.findOneAndUpdate(
     { phoneNumber },
