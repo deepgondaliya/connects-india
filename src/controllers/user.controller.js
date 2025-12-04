@@ -20,9 +20,9 @@ const createProfile = asyncHandler(async (req, res) => {
   const detail = await UserDetail.create({
     ...req.body,
     profileImage,
-    habits: req.body.habits?.split(',').map(h => h.trim()).filter(Boolean) || [],
-    interests: req.body.interests?.split(',').map(i => i.trim()).filter(Boolean) || [],
-    skills: req.body.skills?.split(',').map(s => s.trim()).filter(Boolean) || [],
+    habits: Array.isArray(req.body.habits) ? req.body.habits : (req.body.habits?.split(',').map(h => h.trim()).filter(Boolean) || []),
+    interests: Array.isArray(req.body.interests) ? req.body.interests : (req.body.interests?.split(',').map(i => i.trim()).filter(Boolean) || []),
+    skills: Array.isArray(req.body.skills) ? req.body.skills : (req.body.skills?.split(',').map(s => s.trim()).filter(Boolean) || []),
   });
 
   await User.findByIdAndUpdate(req.user._id, { userDetailId: detail._id });
@@ -48,11 +48,6 @@ const updateUserProfile = asyncHandler(async (req, res) => {
 });
 
 const logout = asyncHandler(async (req, res) => {
-  res.clearCookie('jwt', {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
-  });
   success(res, null, 'Logged out successfully');
 });
 

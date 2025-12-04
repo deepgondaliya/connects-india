@@ -9,9 +9,9 @@ const profileSchema = Joi.object({
   gender: Joi.string().valid('Male', 'Female', 'Other').required(),
   dateOfBirth: Joi.date().max('now').required(),
   preferredLanguage: Joi.string().required(),
-  habits: Joi.array().items(Joi.string()),
-  interests: Joi.array().items(Joi.string()),
-  skills: Joi.array().items(Joi.string()),
+  habits: Joi.alternatives().try(Joi.array().items(Joi.string()), Joi.string()),
+  interests: Joi.alternatives().try(Joi.array().items(Joi.string()), Joi.string()),
+  skills: Joi.alternatives().try(Joi.array().items(Joi.string()), Joi.string()),
 });
 
 const updateProfileSchema = Joi.object({
@@ -23,9 +23,9 @@ const updateProfileSchema = Joi.object({
   gender: Joi.string().valid('Male', 'Female', 'Other'),
   dateOfBirth: Joi.date().max('now'),
   preferredLanguage: Joi.string(),
-  habits: Joi.array().items(Joi.string()),
-  interests: Joi.array().items(Joi.string()),
-  skills: Joi.array().items(Joi.string()),
+  habits: Joi.alternatives().try(Joi.array().items(Joi.string()), Joi.string()),
+  interests: Joi.alternatives().try(Joi.array().items(Joi.string()), Joi.string()),
+  skills: Joi.alternatives().try(Joi.array().items(Joi.string()), Joi.string()),
 }).min(1); // at least one field
 
 module.exports = { profileSchema, updateProfileSchema };

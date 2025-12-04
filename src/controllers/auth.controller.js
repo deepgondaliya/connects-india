@@ -17,14 +17,7 @@ const verifyOtpCtrl = asyncHandler(async (req, res) => {
 
   const { token, isNewUser, isProfileComplete } = await verifyOtp(req.body.phoneNumber, req.body.otp);
 
-  res.cookie('jwt', token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-  });
-
-  success(res, { isNewUser, isProfileComplete }, 'Login successful');
+  success(res, { token, isNewUser, isProfileComplete }, 'Login successful');
 });
 
 module.exports = { sendOtpCtrl, verifyOtpCtrl };
