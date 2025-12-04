@@ -2,7 +2,9 @@ const { verifyToken } = require('../config/jwt');
 const User = require('../models/User.model');
 
 const protect = async (req, res, next) => {
-  const token = req.cookies?.jwt;
+  const authHeader = req.headers.authorization;
+  const token = authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  
   if (!token) {
     return res.status(401).json({ success: false, message: 'Not authorized' });
   }
